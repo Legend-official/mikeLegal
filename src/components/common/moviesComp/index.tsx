@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { fetchMovies } from "@/api/getApi";
 import MovieCard from "../movieCard";
@@ -14,6 +14,7 @@ const MovieList = () => {
   const [debounceTimeout, setDebounceTimeout] = useState<any>(null);
   const [notFound, setNotFound] = useState(false);
   const { toast } = useToast();
+  const listInnerRef = useRef();
 
   const loadMovies = async (reset = false) => {
     try {
@@ -37,6 +38,19 @@ const MovieList = () => {
     }
   };
 
+  const onScroll = () => {
+    if (listInnerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = listInnerRef.current;
+      console.log({ object: { scrollTop, scrollHeight, clientHeight } });
+      if (scrollTop + clientHeight === scrollHeight) {
+        // This will be triggered after hitting the last element.
+        // API call should be made here while implementing pagination.
+        loadMovies();
+      }
+    }
+  };
+
+  console.log("Ref", listInnerRef.current);
 
   useEffect(() => {
     loadMovies(true);
@@ -78,7 +92,34 @@ const MovieList = () => {
         </div>
       )}
 
-      <InfiniteScroll
+      <div
+        style={{ height: "100vh", width: "100%", overflowY: "auto" }}
+        onScroll={onScroll}
+        ref={listInnerRef}
+      >
+        <ul style={{ listStyle: "none", padding: 0 }}>
+          {/* {notFound ? (
+            <div className="relative w-full justify-center center flex">
+              <p className="text-xl sm:text-1xl my-6 font-semibold tracking-wide text-center">
+                Movie not found
+              </p>
+            </div>
+          ) : ( */}
+          <>
+            {movies.map((movie: Movies, index) => {
+              return (
+                <MovieCard
+                  Title={movie.Title}
+                  imdbID={movie.imdbID}
+                  key={movie?.imdbID + index}
+                />
+              );
+            })}
+          </>
+          {/* )} */}
+        </ul>
+      </div>
+      {/* <InfiniteScroll
         hasMore={true}
         next={loadMovies}
         dataLength={movies.length}
@@ -111,7 +152,7 @@ const MovieList = () => {
             </>
           )}
         </ul>
-      </InfiniteScroll>
+      </InfiniteScroll> */}
     </div>
   );
 };
